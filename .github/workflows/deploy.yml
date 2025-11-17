@@ -1,0 +1,30 @@
+name: Deploy Automático no Servidor
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v3
+
+      - name: Configurar SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/nfce_deploy
+          chmod 600 ~/.ssh/nfce_deploy
+          printf "Host meu-servidor\n  HostName ${{ secrets.SERVER_HOST }}\n  User ${{ secrets.SERVER_USER }}\n  IdentityFile ~/.ssh/nfce_deploy\n  StrictHostKeyChecking no\n" > ~/.ssh/config
+
+      - name: Deploy no Servidor
+        run: |
+          ssh meu-servidor "
+            cd /root/nfce-relatorio &&
+            git pull &&
+            systemctl restart nfce
+          "
+
